@@ -15,10 +15,10 @@ func NewHandler(store ProductStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
-	router.GET("/products", h.getUsers)
+	router.GET("/products", h.getProducts)
 }
 
-func (h *Handler) getUsers(ctx *gin.Context) {
+func (h *Handler) getProducts(ctx *gin.Context) {
 	products, err := h.store.GetProducts()
 
 	if err != nil {
