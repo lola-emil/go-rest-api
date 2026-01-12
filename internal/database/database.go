@@ -3,12 +3,14 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	_ "database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type Service interface {
@@ -22,11 +24,11 @@ type service struct {
 }
 
 var (
-	dbname   = "go_contact"
-	password = "789632145"
-	username = "staleexam"
-	host     = "localhost"
-	port     = "3306"
+	dbname   = os.Getenv("DB_NAME")
+	password = os.Getenv("DB_PASSWORD")
+	username = os.Getenv("DB_USERNAME") //"staleexam"
+	host     = os.Getenv("DB_HOST")     // "localhost"
+	port     = os.Getenv("DB_PORT")     // "3306"
 
 	dbInstance *service
 )
