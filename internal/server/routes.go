@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"example.com/contact/internal/auth"
 	"example.com/contact/internal/contact"
 	"example.com/contact/internal/user"
 	"github.com/go-chi/chi/v5"
@@ -55,13 +56,16 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 
 	r := chi.NewRouter()
 
+	r.Route("/auth", func(r chi.Router) {
+		r.Mount("/", auth.RegisterModule(s.db.GetInstance()))
+	})
+
 	r.Route("/api", func(r chi.Router) {
 		r.Mount("/users", user.RegisterModule(s.db.GetInstance()))
 		r.Mount("/contacts", contact.RegisterModule(s.db.GetInstance()))
 	})
 
 	// Serve SPA
-
 	if os.Getenv("ENV") == "dev" {
 		r.Handle("/*", viteProxy)
 	} else {

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"example.com/contact/internal/contact"
+	"example.com/contact/internal/password"
 )
 
 type userBody struct {
@@ -141,11 +142,18 @@ func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hash, err := password.HashPassword(body.Password, password.DefaultParams)
+
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	userData := UserModel{
 		Firstname: body.Firstname,
 		Lastname:  body.Lastname,
 		Email:     body.Email,
-		Password:  body.Password,
+		Password:  hash,
 	}
 
 	userId, err := h.userRepo.Save(ctx, userData)

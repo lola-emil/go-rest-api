@@ -64,6 +64,17 @@ func (r *UserRepository) FindById(id int64) (UserModel, error) {
 	return user, nil
 }
 
+func (r *UserRepository) FindByEmail(email string) (UserModel, error) {
+	query := "SELECT * FROM users WHERE email = ?"
+
+	user := UserModel{}
+	if err := r.db.Get(&user, query, email); err != nil {
+		return UserModel{}, err
+	}
+
+	return user, nil
+}
+
 func (r *UserRepository) DeleteById(ctx context.Context, id int64) error {
 	query := `DELETE FROM users WHERE id = ?`
 	_, err := r.db.ExecContext(ctx, query, id)

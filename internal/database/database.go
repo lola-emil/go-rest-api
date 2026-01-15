@@ -44,8 +44,8 @@ func New() Service {
 		log.Fatal(err)
 	}
 
-	db.SetMaxOpenConns(50) // max total connections
-	db.SetMaxIdleConns(25) // idle connections
+	db.SetMaxOpenConns(100) // max total connections
+	db.SetMaxIdleConns(50)  // idle connections
 	db.SetConnMaxLifetime(5 * time.Minute)
 	db.SetConnMaxIdleTime(1 * time.Minute)
 
