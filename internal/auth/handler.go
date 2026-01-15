@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -51,7 +52,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "Invalid Email", http.StatusBadRequest)
 		} else {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("SQL: %s", err.Error()), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -59,7 +60,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	passwordMatched, err := password.VerifyPassword(body.Password, user.Password)
 
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("PASSWORD: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
@@ -77,7 +78,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	token, err := jsonwebtoken.CreateToken(claims)
 
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("JWT: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }

@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -55,43 +57,39 @@ func HashPassword(password string, p *Argon2Params) (string, error) {
 	return encoded, nil
 }
 
-func VerifyPassword(password, encodedHash string) (bool, error) {
+func VerifyPassword(password, encoded string) (bool, error) {
+	parts := strings.Split(encoded, "$")
+	if len(parts) != 6 {
+		return false, errors.New("invalid argon2 hash format")
+	}
+
 	var memory uint32
 	var time uint32
 	var threads uint8
-	var salt, hash []byte
 
-	_, err := fmt.Sscanf(
-		encodedHash,
-		"$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s",
-		&memory,
-		&time,
-		&threads,
-		&salt,
-		&hash,
-	)
+	_, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &memory, &time, &threads)
 	if err != nil {
 		return false, err
 	}
 
-	saltBytes, err := base64.RawStdEncoding.DecodeString(string(salt))
+	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
 		return false, err
 	}
 
-	hashBytes, err := base64.RawStdEncoding.DecodeString(string(hash))
+	hash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
 		return false, err
 	}
 
-	computedHash := argon2.IDKey(
+	computed := argon2.IDKey(
 		[]byte(password),
-		saltBytes,
+		salt,
 		time,
 		memory,
 		threads,
-		uint32(len(hashBytes)),
+		uint32(len(hash)),
 	)
 
-	return subtle.ConstantTimeCompare(hashBytes, computedHash) == 1, nil
+	return subtle.ConstantTimeCompare(hash, computed) == 1, nil
 }

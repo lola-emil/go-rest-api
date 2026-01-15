@@ -19,7 +19,7 @@ func NewAuthRoute(handler AuthHandler) AuthRoute {
 func (r *route) GetRoutes() *chi.Mux {
 	mux := chi.NewRouter()
 
-	mux.Post("/", r.handler.Login)
+	mux.Post("/login", r.handler.Login)
 
 	return mux
 }
