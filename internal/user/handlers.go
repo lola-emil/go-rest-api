@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"example.com/contact/internal/contact"
-	"example.com/contact/internal/password"
+	"example.com/contact/internal/pkg/password"
 )
 
 type userBody struct {

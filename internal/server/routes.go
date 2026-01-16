@@ -9,8 +9,10 @@ import (
 
 	"example.com/contact/internal/auth"
 	"example.com/contact/internal/contact"
+	"example.com/contact/internal/pkg/middleware"
 	"example.com/contact/internal/user"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 )
 
 // SPAHandler serves a single page application.
@@ -56,11 +58,25 @@ func (s *Server) RegisterRoutes() *chi.Mux {
 
 	r := chi.NewRouter()
 
+	// r.Use(csrf.Protect(
+	// 	[]byte("32-byte-long-auth-key"),
+	// 	csrf.Secure(true),
+	// 	csrf.SameSite(csrf.SameSiteStrictMode),
+	// ))
+
+	r.Get("/csrf", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
+		w.WriteHeader(http.StatusNoContent)
+	})
+
 	r.Route("/auth", func(r chi.Router) {
 		r.Mount("/", auth.RegisterModule(s.db.GetInstance()))
 	})
 
 	r.Route("/api", func(r chi.Router) {
+
+		r.Use(middleware.AuthMiddleware)
+
 		r.Mount("/users", user.RegisterModule(s.db.GetInstance()))
 		r.Mount("/contacts", contact.RegisterModule(s.db.GetInstance()))
 	})
@@ -90,4 +106,5 @@ func (s *Server) CorsMiddlewareWrapper(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+
 }
