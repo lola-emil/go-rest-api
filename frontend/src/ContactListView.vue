@@ -28,14 +28,17 @@ async function getContacts() {
             "Authorization": "Bearer " + token
         }
     });
-    const data = await res.json();      
+    const data = await res.json();
 
     contacts.value = data as Contact[]
 }
 
 async function deleteContact(contactId: number) {
     await fetch("/api/contacts/" + contactId, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
     })
 
     await getContacts();
@@ -63,6 +66,12 @@ const table = useVueTable({
             header: "User",
             accessorKey: "user_id"
         },
+
+        {
+            id: "actions",
+            header: "",
+            cell: () => null
+        }
     ],
 
     getCoreRowModel: getCoreRowModel(),
@@ -96,7 +105,15 @@ onMounted(() => {
 
                     <tr v-for="row in table.getRowModel().rows" :key="row.id">
                         <td v-for="cell in row.getVisibleCells()" :key="cell.id">
-                            {{ cell.getValue() }}
+                            <template v-if="cell.column.id == 'actions'">
+                                <div class="flex gap-3">
+                                    <button class="btn btn-xs btn-error"
+                                        @click="deleteContact(cell.row.original.id)">Delete</button>
+                                </div>
+                            </template>
+                            <template v-else>
+                                {{ cell.getValue() }}
+                            </template>
                         </td>
                     </tr>
                 </tbody>
