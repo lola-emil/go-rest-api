@@ -13,6 +13,10 @@ interface Contact {
 const contacts = ref<Contact[]>([])
 const globalFilter = ref('')
 
+// dummy token
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjkyMzkxMjcsImlzcyI6IndoYXQtdGhlLWZhY2siLCJ1c2VyX2lkIjoyMH0.oTa2V0oQzc0CXVdzaWhevU85sA9eyWWJlWhCqkXmgMw"
+
+
 watch(globalFilter, value => {
     table.setGlobalFilter(value)
 })
@@ -21,7 +25,7 @@ async function getContacts() {
     const res = await fetch("/api/contacts", {
         method: "GET",
         headers: {
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjkyMzkxMjcsImlzcyI6IndoYXQtdGhlLWZhY2siLCJ1c2VyX2lkIjoyMH0.oTa2V0oQzc0CXVdzaWhevU85sA9eyWWJlWhCqkXmgMw"
+            "Authorization": "Bearer " + token
         }
     });
     const data = await res.json();      
