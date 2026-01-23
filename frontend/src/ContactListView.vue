@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { getCoreRowModel, getFilteredRowModel, useVueTable } from '@tanstack/vue-table';
 
 interface Contact {
     id: number;
@@ -10,10 +11,20 @@ interface Contact {
 }
 
 const contacts = ref<Contact[]>([])
+const globalFilter = ref('')
+
+watch(globalFilter, value => {
+    table.setGlobalFilter(value)
+})
 
 async function getContacts() {
-    const res = await fetch("/api/contacts?limit=500");
-    const data = await res.json();
+    const res = await fetch("/api/contacts", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjkyMzkxMjcsImlzcyI6IndoYXQtdGhlLWZhY2siLCJ1c2VyX2lkIjoyMH0.oTa2V0oQzc0CXVdzaWhevU85sA9eyWWJlWhCqkXmgMw"
+        }
+    });
+    const data = await res.json();      
 
     contacts.value = data as Contact[]
 }
@@ -26,6 +37,33 @@ async function deleteContact(contactId: number) {
     await getContacts();
 }
 
+const table = useVueTable({
+    data: contacts,
+    columns: [
+        {
+            header: "Name",
+            accessorKey: "name"
+        },
+
+        {
+            header: "Email",
+            accessorKey: "email"
+        },
+
+        {
+            header: "Phone Number",
+            accessorKey: "phone_number"
+        },
+
+        {
+            header: "User",
+            accessorKey: "user_id"
+        },
+    ],
+
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel()
+})
 
 onMounted(() => {
     getContacts()
@@ -37,27 +75,24 @@ onMounted(() => {
         <div class="mt-5">
             <h3 class="text-xl">Contacts List</h3>
         </div>
-
+        <br>
+        <div class="w-full">
+            <input type="text" class="input input-sm w-sm" placeholder="Search" v-model="globalFilter">
+        </div>
         <div class="mt-5 border rounded-box border-base-content/5">
             <table class="table">
                 <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone Number</th>
-                        <th>User</th>
-                        <th></th>
+                    <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+                        <th v-for="header in headerGroup.headers">
+                            {{ header.column.columnDef.header ?? '' }}
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="value in contacts">
-                        <td>{{ value.name }}</td>
-                        <td>{{ value.email }}</td>
-                        <td>{{ value.phone_number }}</td>
-                        <td>{{ value.user_id }}</td>
-                        <td class="flex gap-3 justify-end">
-                            <button class="btn btn-info btn-xs">Edit</button>
-                            <button class="btn btn-error btn-xs" @click="deleteContact(value.id)">Delete</button>
+
+                    <tr v-for="row in table.getRowModel().rows" :key="row.id">
+                        <td v-for="cell in row.getVisibleCells()" :key="cell.id">
+                            {{ cell.getValue() }}
                         </td>
                     </tr>
                 </tbody>

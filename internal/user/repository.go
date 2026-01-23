@@ -54,6 +54,30 @@ func (r *UserRepository) FindAll(offset int, limit int) ([]UserModel, error) {
 	return users, nil
 }
 
+func (r *UserRepository) ForEachUser(
+	ctx context.Context,
+	fn func(UserModel) error,
+) error {
+	query := "SELECT * FROM users"
+	rows, err := r.db.QueryxContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u UserModel
+		if err := rows.StructScan(&u); err != nil {
+			return err
+		}
+		if err := fn(u); err != nil {
+			return err
+		}
+	}
+
+	return rows.Err()
+}
+
 func (r *UserRepository) FindById(id int64) (UserModel, error) {
 	user := UserModel{}
 

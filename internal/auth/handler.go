@@ -27,10 +27,6 @@ type loginBody struct {
 	Password string `json:"password"`
 }
 
-type refreshTokenBody struct {
-	RefreshToken string `json:"token"`
-}
-
 func NewAuthHandler(userRepo *user.UserRepository) AuthHandler {
 	return &handler{
 		userRepo: userRepo,
@@ -115,12 +111,10 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	_, err := r.Cookie("refresh_token")
 
-	var body refreshTokenBody
-
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -132,13 +126,6 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := claims.UserID
-
-	refreshToken, _, err := jsonwebtoken.CreateRefreshToken(userID)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
 	accessToken, err := jsonwebtoken.CreateToken(jwt.MapClaims{
 		"user_id": userID,
@@ -152,15 +139,10 @@ func (h *handler) Refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]any{
-		"refresh_token": refreshToken,
-		"access_token":  accessToken,
+		"access_token": accessToken,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func (h *handler) Logout() {
-
 }
